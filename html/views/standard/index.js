@@ -66,6 +66,9 @@ function initialize() {
 	
 	$.each([1, 2], function(idx, t) {
 		WS.Register([ 'ScoreBoard.Team(' + t + ').Color' ], function(k, v) {
+			if (v === null) {
+				v = '';
+			}
 			switch (k){
 				case 'ScoreBoard.Team(' + t + ').Color(scoreboard_fg)':
 					$('.Team' + t + ' .Name').css('color', v);
@@ -76,6 +79,9 @@ function initialize() {
 				case 'ScoreBoard.Team(' + t + ').Color(scoreboard_glow)':
 					var shadow = '0px 0px 0.2em ' + v;
 					var shadowCSS = shadow + ', ' + shadow + ', ' + shadow;
+					if (v === '') {
+						shadowCSS = '';
+					}
 					$('.Team' + t + ' .Name').css('text-shadow',shadowCSS);
 					break;
 				case 'ScoreBoard.Team(' + t + ').Color(scoreboard_dots_fg)':
@@ -94,3 +100,4 @@ function initialize() {
 	});
 
 }
+//# sourceURL=views\standard\index.js
