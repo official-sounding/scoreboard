@@ -5,6 +5,8 @@ import java.util.List;
 import java.util.Timer;
 import java.util.TimerTask;
 
+import com.carolinarollergirls.scoreboard.defaults.DefaultScoreBoardModel;
+
 public class ScoreBoardClock extends TimerTask {
 	private ScoreBoardClock() {
 		offset = System.currentTimeMillis();
@@ -15,11 +17,15 @@ public class ScoreBoardClock extends TimerTask {
 		return instance;
 	}
 	
-	public synchronized long getCurrentTime() {
+	public long getCurrentTime() {
+	synchronized (coreLock) {
 		updateTime();
 		return currentTime;
 	}
-	public synchronized void rewindTo(long time) {
+	}
+
+	public void rewindTo(long time) {
+	synchronized (coreLock) {
 		lastRewind = currentTime - time;
 		// changing offset instead of currentTime has two reasons:
 		// 1. The change only becomes visible to clients after the clock has restarted.
@@ -27,23 +33,35 @@ public class ScoreBoardClock extends TimerTask {
 		//    idle until it has caught up, instead of advancing the clocks by the desired amount.
 		offset -= lastRewind;
 	}
-	public synchronized long getLastRewind() {
+	}
+
+	public long getLastRewind() {
+	synchronized (coreLock) {
 		return lastRewind;
 	}
-	public synchronized void advance(long ms) {
+	}
+	
+	public void advance(long ms) {
+	synchronized (coreLock) {
 		currentTime += ms;
 		updateClients();
 	}
+	}
 	
-	public synchronized void stop() {
+	public void stop() {
+	synchronized (coreLock) {
 		updateTime();
 		stopCounter++;
 	}
-	public synchronized void start(boolean doCatchUp) {
+	}
+
+	public void start(boolean doCatchUp) {
+	synchronized (coreLock) {
 		if (!doCatchUp) {
 			offset = System.currentTimeMillis() - currentTime;
 		}
 		stopCounter--;
+	}
 	}
 	
 	public synchronized void registerClient(ScoreBoardClockClient client) {
@@ -62,11 +80,13 @@ public class ScoreBoardClock extends TimerTask {
 		}
 	}
 	
-	public synchronized void run() {
+	public void run() {
+	synchronized (coreLock) {
 		if (stopCounter == 0) {
 			updateTime();
 			updateClients();
 		}
+	}
 	}
 	
 	private long offset;
@@ -77,6 +97,8 @@ public class ScoreBoardClock extends TimerTask {
 	private Timer timer = new Timer();
 
 	private static final ScoreBoardClock instance = new ScoreBoardClock();
+
+	private Object coreLock = DefaultScoreBoardModel.getCoreLock();
 	
 	private List<ScoreBoardClockClient> clients = new ArrayList<ScoreBoardClockClient>();
 	
